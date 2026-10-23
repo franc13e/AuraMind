@@ -17,11 +17,13 @@ def _database_url() -> tuple[str, dict]:
     """Resolve DATABASE_URL into an async driver URL plus connect args.
 
     Accepts plain ``postgres://`` / ``postgresql://`` URLs (as given by Neon,
-    Supabase or Vercel Postgres) and rewrites them for asyncpg. Without
-    DATABASE_URL, falls back to a local SQLite file (``/tmp`` on Vercel,
+    Supabase or Vercel Postgres) and rewrites them for asyncpg. Without a
+    database URL, falls back to a local SQLite file (``/tmp`` on Vercel,
     where it does not persist between cold starts).
     """
-    url = os.getenv("DATABASE_URL", "")
+    # Prefer Neon's direct connection: asyncpg's prepared statements don't
+    # work through the pgbouncer pooler, and NullPool already avoids pooling.
+    url = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL", "")
     if not url:
         path = "/tmp/auramind.db" if os.getenv("VERCEL") else "./auramind.db"
         return f"sqlite+aiosqlite:///{path}", {}
