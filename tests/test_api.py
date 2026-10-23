@@ -54,3 +54,16 @@ def test_feedback_rejects_invalid_response():
     with TestClient(app) as c:
         r = c.post(f"{BASE}/feedback", json={"patient_id": "t", "action_id": "x", "response": "meh"})
         assert r.status_code == 400
+
+
+def test_guardrail_alerts_on_threshold_breach_without_ai():
+    with TestClient(app) as c:
+        c.post(f"{BASE}/reset/hot")
+        hot = {**SNAPSHOT, "patient_id": "hot", "temperature_c": 34}
+        actions = c.post(f"{BASE}/snapshot", json=hot).json()["actions"]
+        alerts = [a for a in actions if a["tool"] == "send_alert"]
+        assert len(alerts) == 1 and alerts[0]["args"]["severity"] == "danger" and alerts[0]["id"]
+
+        # Same condition again is de-duplicated.
+        actions = c.post(f"{BASE}/snapshot", json=hot).json()["actions"]
+        assert not any(a["tool"] == "send_alert" for a in actions)

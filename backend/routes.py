@@ -108,6 +108,20 @@ def _severity_rank(sig: tuple) -> int:
     return max([order.get(sev, 0) for _, sev in sig], default=0)
 
 
+def _guardrail_alert(temp: float, humidity: float) -> dict | None:
+    """Rule-based alert used when the agent fails to raise one for a threshold breach."""
+    if temp >= 33:
+        msg = f"It's very hot here ({temp:.0f}°C). Please move somewhere cooler and drink some water."
+        return {"tool": "send_alert", "args": {"message": msg, "severity": "danger"}}
+    if humidity >= 85:
+        msg = f"The air is very humid ({humidity:.0f}%). Try to get to a cooler, well-ventilated space."
+        return {"tool": "send_alert", "args": {"message": msg, "severity": "danger"}}
+    if temp >= 30:
+        msg = f"It's getting warm ({temp:.0f}°C). A short break somewhere cooler could help."
+        return {"tool": "send_alert", "args": {"message": msg, "severity": "warning"}}
+    return None
+
+
 # ── In-memory session state (per patient) ────────────────────────────────
 
 MEMORY_SIZE = 5
@@ -195,6 +209,7 @@ def _run_agent(patient_id: str, history, recent_actions, feedback) -> list[dict]
             response = client.chat.completions.create(
                 model=model, messages=messages, tools=TOOLS, tool_choice="auto")
         except Exception as e:
+            print(f"Agent error: {e}")
             actions_taken.append({"tool": "error", "args": {"message": str(e)[:100]}})
             break
         msg = response.choices[0].message
@@ -253,6 +268,13 @@ async def snapshot(snap: SnapshotRequest, db: AsyncSession = Depends(get_session
     now = datetime.now(timezone.utc)
     level, score = estimate_mood(snap.temperature_c, snap.humidity_pct, snap.sound_db)
     cur_sig = _alert_signature(snap.temperature_c, snap.humidity_pct)
+
+    # Guardrail: the LLM occasionally skips or malforms the alert call, so make
+    # sure a threshold breach always produces an alert (still subject to dedup).
+    if cur_sig and not any(a["tool"] == "send_alert" for a in actions):
+        fallback = _guardrail_alert(snap.temperature_c, snap.humidity_pct)
+        if fallback:
+            actions.append(fallback)
 
     # Dedup alerts and suggestions
     filtered = []
@@ -421,12 +443,12 @@ async def coping_suggestions(req: CopingRequest):
         "Generate exactly 3 practical coping strategies they can do RIGHT NOW "
         "without leaving their seat or needing any equipment. Each under 3 minutes. "
         "Be specific to the conditions listed — no generic advice.\n\n"
-        "Respond ONLY with a valid JSON array, no markdown, no explanation:\n"
-        "[\n"
+        "Respond ONLY with a JSON object, no markdown, no explanation:\n"
+        "{\"steps\": [\n"
         "  {\"title\": \"Short action title\", \"description\": \"One or two sentence specific instruction.\", \"minutes\": 2},\n"
         "  {\"title\": \"...\", \"description\": \"...\", \"minutes\": 1},\n"
         "  {\"title\": \"...\", \"description\": \"...\", \"minutes\": 3}\n"
-        "]"
+        "]}"
     )
 
     try:
@@ -437,12 +459,16 @@ async def coping_suggestions(req: CopingRequest):
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=500,
+            max_tokens=1000,
+            response_format={"type": "json_object"},
         )
         raw = completion.choices[0].message.content.strip()
-        raw = raw.replace("```json", "").replace("```", "").strip()
-        steps = _json.loads(raw)
-        return {"steps": steps}
+        steps = _json.loads(raw)["steps"]
+        if not isinstance(steps, list) or not all(
+            isinstance(x, dict) and {"title", "description", "minutes"} <= x.keys() for x in steps
+        ):
+            raise ValueError(f"Unexpected coping format: {raw[:200]}")
+        return {"steps": steps[:3]}
     except Exception as e:
         print(f"Coping generation error: {e}")
         return {"steps": [
