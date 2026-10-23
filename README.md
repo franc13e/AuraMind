@@ -5,7 +5,7 @@ AuraMind watches the environment you're in (temperature, humidity, noise and lig
 It started as my Final Year Project: a module inside a larger mental-health platform, investigating whether **agentic AI environmental monitoring** positively influences user adoption in mental-health care. This repository is the standalone version.
 
 **Live demo:** https://auramind-ashy.vercel.app  
-_Allow location and microphone access when prompted. Everything stays approximate and nothing is recorded._
+_Allow location and microphone access when prompted. Audio and camera frames are processed in your browser and never uploaded; only summary readings such as noise level and temperature are saved._
 
 **Tech Stack:** Flutter Web · Dart · FastAPI · SQLAlchemy (async) · PostgreSQL / SQLite · Groq LLM API (tool calling) · Vercel
 
