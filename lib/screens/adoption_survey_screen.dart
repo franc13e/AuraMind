@@ -25,7 +25,6 @@ class _SurveyItem {
     required this.id,
     required this.construct,
     required this.question,
-    this.rating,
   });
 
   Map<String, dynamic> toJson() => {
@@ -34,13 +33,6 @@ class _SurveyItem {
     'question': question,
     'rating': rating,
   };
-
-  static _SurveyItem fromJson(Map<String, dynamic> j) => _SurveyItem(
-    id: j['id'] as String,
-    construct: j['construct'] as String,
-    question: j['question'] as String,
-    rating: j['rating'] as int?,
-  );
 }
 
 class AdoptionSurveyScreen extends StatefulWidget {

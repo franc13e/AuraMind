@@ -15,7 +15,6 @@ typedef SoundLevelCallback = void Function(double db);
 class MicrophoneNoiseReader {
   web.MediaStream? _stream;
   web.AudioContext? _audioContext;
-  web.AnalyserNode? _analyser;
   Timer? _timer;
 
   Future<bool> start(SoundLevelCallback onLevel) async {
@@ -30,7 +29,6 @@ class MicrophoneNoiseReader {
     final analyser = audioContext.createAnalyser()..fftSize = 2048;
     source.connect(analyser);
     _audioContext = audioContext;
-    _analyser = analyser;
 
     final bufferLength = analyser.fftSize;
     final dataArray = Float32List(bufferLength).toJS;
@@ -63,6 +61,5 @@ class MicrophoneNoiseReader {
       _audioContext?.close();
     } catch (_) {}
     _audioContext = null;
-    _analyser = null;
   }
 }

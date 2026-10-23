@@ -260,7 +260,7 @@ class SensorService extends ChangeNotifier {
     final tooLoud  = hasSoundData && currentSoundDb > comfortProfile.maxSound;
     final tooDim   = currentLightLux >= 0 && currentLightLux < comfortProfile.minLight * 0.3;
     final tooGlary = currentLightLux >= 0 && currentLightLux > comfortProfile.maxLight * 1.5;
-    return '\$tempBucket|\$tooHot|\$tooCold|\$tooHumid|\$tooDry|\$tooLoud|\$tooDim|\$tooGlary';
+    return '$tempBucket|$tooHot|$tooCold|$tooHumid|$tooDry|$tooLoud|$tooDim|$tooGlary';
   }
 
   String _lastPlanSignature = '';

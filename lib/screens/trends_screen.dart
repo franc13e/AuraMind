@@ -36,7 +36,6 @@ class _TrendsScreenState extends State<TrendsScreen> {
   Future<void> _load() async {
     setState(() { loading = true; expandedIndex = null; });
     final service = context.read<SensorService>();
-    final agent = service.agent;
 
     try {
       if (period == TrendPeriod.day) {

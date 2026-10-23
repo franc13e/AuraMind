@@ -16,7 +16,10 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<SensorService>().importBackendHistory(hours: 24 * 30));
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<SensorService>().importBackendHistory(hours: 24 * 30);
+    });
   }
 
   @override

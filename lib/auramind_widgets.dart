@@ -640,11 +640,6 @@ class _ActionPlanCardState extends State<ActionPlanCard> {
     final envStep = activeSteps.where((s) => !s.isCoping).firstOrNull;
     if (envStep == null) return const SizedBox.shrink();
     final step = envStep;
-    final impact = step.estimatedImpact.clamp(0, 99).toStringAsFixed(0);
-
-    const copeColor = Color(0xFF0DA99B);
-    const copeSoft = Color(0xFFE6F7F6);
-    final isCopingOnly = envStep == null;
 
     return AppCard(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -654,29 +649,27 @@ class _ActionPlanCardState extends State<ActionPlanCard> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: isCopingOnly ? copeSoft : C.accentSoft,
+              color: C.accentSoft,
               borderRadius: BorderRadius.circular(11),
             ),
-            child: Icon(
-              isCopingOnly ? Icons.spa_rounded : Icons.self_improvement_rounded,
+            child: const Icon(
+              Icons.self_improvement_rounded,
               size: 18,
-              color: isCopingOnly ? copeColor : C.accent,
+              color: C.accent,
             ),
           ),
           const SizedBox(width: 11),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                isCopingOnly ? 'Coping technique' : 'Suggested reset',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+              const Text(
+                'Suggested reset',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
                     color: C.t1, letterSpacing: -0.2),
               ),
               const SizedBox(height: 3),
               Text(
-                isCopingOnly
-                    ? "Can't change the space? Regulate yourself instead"
-                    : 'One small action based on tracked conditions',
+                'One small action based on tracked conditions',
                 style: TextStyle(fontSize: 11, color: C.t3.withValues(alpha: 0.9)),
               ),
             ],

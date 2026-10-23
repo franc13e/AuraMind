@@ -1,5 +1,7 @@
 # AuraMind — Agentic AI Wellbeing Companion
 
+[![CI](https://github.com/franc13e/AuraMind/actions/workflows/ci.yml/badge.svg)](https://github.com/franc13e/AuraMind/actions/workflows/ci.yml)
+
 AuraMind watches the environment you're in (temperature, humidity, noise and light) and uses an AI agent to decide when to step in with a gentle alert, a small reset, or a coping technique for when you can't change your surroundings.
 
 It started as my Final Year Project: a module inside a larger mental-health platform, investigating whether **agentic AI environmental monitoring** positively influences user adoption in mental-health care. This repository is the standalone version.
@@ -40,7 +42,7 @@ _Allow location and microphone access when prompted. Audio and camera frames are
                           └──────────────────────────────────────────────────┘
 ```
 
-Alerts are de-duplicated by severity signature, and suggestions have a 30-minute cooldown so the agent doesn't nag.
+A rule-based guardrail guarantees an alert whenever a safety threshold is crossed, even if the LLM skips or malforms its tool call. Alerts are de-duplicated by severity signature, and suggestions have a 30-minute cooldown so the agent doesn't nag.
 
 ## Project Structure
 
@@ -56,6 +58,7 @@ Alerts are de-duplicated by severity signature, and suggestions have a 30-minute
 │   ├── routes.py         # AuraMind endpoints + Groq agent
 │   └── db.py             # Async SQLAlchemy engine & tables
 ├── api/index.py          # Vercel serverless entry point
+├── test/                 # Flutter unit tests
 ├── tests/                # Backend API tests
 └── vercel.json           # Builds Flutter + serves API on the same domain
 ```
@@ -79,7 +82,7 @@ Alerts are de-duplicated by severity signature, and suggestions have a 30-minute
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt uvicorn
+pip install -r requirements-dev.txt
 cp .env.example .env        # add your GROQ_API_KEY
 uvicorn backend.main:app --reload --port 8001
 ```
@@ -94,10 +97,13 @@ flutter run -d chrome       # debug builds talk to http://localhost:8001
 **Tests**
 
 ```bash
-pip install pytest && pytest
+pytest          # backend API tests
+flutter test    # mood engine unit tests
 ```
 
-> Without a `GROQ_API_KEY` the app still works: the agent stands by and coping tips fall back to built-in techniques.
+Both suites, plus `flutter analyze` and a web build, run on every push via GitHub Actions.
+
+> Without a `GROQ_API_KEY` the app still works: threshold alerts come from a rule-based guardrail and coping tips fall back to built-in techniques.
 
 ## Deployment (Vercel)
 
