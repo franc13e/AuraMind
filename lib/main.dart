@@ -1,5 +1,6 @@
 // lib/main.dart — AuraMind standalone entry point
-// Replace the existing lib/main.dart with this file.
+
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,9 +15,20 @@ import 'screens/settings_screen.dart';
 import 'screens/adoption_survey_screen.dart';
 import 'auramind_theme.dart';
 
+/// Per-browser guest ID, so each visitor gets their own history and alerts
+/// on the backend instead of sharing one "anonymous" patient.
+late final String deviceId;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance();
+  var id = prefs.getString('auramind_device_id');
+  if (id == null) {
+    final rng = Random.secure();
+    id = 'guest-${List.generate(12, (_) => rng.nextInt(16).toRadixString(16)).join()}';
+    await prefs.setString('auramind_device_id', id);
+  }
+  deviceId = id;
   runApp(const AuraMindApp());
 }
 
@@ -70,8 +82,8 @@ class _AuraMindShellState extends State<_AuraMindShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sensor = context.read<SensorService>();
+      sensor.setPatientId(deviceId);
       sensor.start();
-      sensor.setPatientId('anonymous');
     });
   }
 
