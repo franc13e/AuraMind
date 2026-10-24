@@ -13,6 +13,14 @@ _Allow location and microphone access when prompted. Audio and camera frames are
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="240" alt="Home screen with live mood estimate and environment insight">
+  <img src="docs/screenshots/home-scrolled.png" width="240" alt="Agent alert and suggested reset with feedback buttons">
+  <img src="docs/screenshots/alerts.png" width="240" alt="Alerts screen with agent interventions and system alerts">
+</p>
+
 ## Features
 
 - **Live environment sensing**
