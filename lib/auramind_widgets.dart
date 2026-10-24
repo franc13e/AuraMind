@@ -88,7 +88,18 @@ class LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (values.length < 2) return;
+    if (values.isEmpty) return;
+    if (values.length == 1) {
+      // A single reading can't form a line: show it as a point on a faint level line
+      // so new users don't see an empty chart.
+      final y = size.height - values.first.clamp(0.0, 1.0) * size.height;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y),
+          Paint()..color = color.withValues(alpha: 0.25)..strokeWidth = 1.5);
+      final center = Offset(size.width / 2, y);
+      canvas.drawCircle(center, 7, Paint()..color = C.card);
+      canvas.drawCircle(center, 5, Paint()..color = color);
+      return;
+    }
     final stroke = Paint()..color = color..strokeWidth = 2.5
       ..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
     final fill = Paint()..shader = LinearGradient(
