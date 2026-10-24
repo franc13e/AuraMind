@@ -472,7 +472,6 @@ class SensorService extends ChangeNotifier {
 
   final List<SensorData> _history = [];
   final List<AlertItem> _alerts = [];
-  final Set<String> _activeAlertKeys = {};
   final Map<String, DateTime> _lastAlertAtByKey = {};
 
   SensorData get current => _current;
@@ -772,7 +771,6 @@ class SensorService extends ChangeNotifier {
     _alerts.clear();
     moodCheckIns.clear();
     interventionRecords.clear();
-    _activeAlertKeys.clear();
     _lastAlertAtByKey.clear();
     _latestResetImpact = null;
     _push(_current);
@@ -1207,24 +1205,21 @@ class SensorService extends ChangeNotifier {
           ),
         ),
     ];
-    final currentKeys = current.map((c) => c.key).toSet();
     final now = DateTime.now();
 
     var changed = false;
     for (final condition in current) {
+      // One alert per condition per cooldown window. Readings such as sound hover
+      // around the threshold, so re-alerting whenever a condition reappears
+      // would bypass the cooldown and flood the alerts list.
       final lastAt = _lastAlertAtByKey[condition.key];
       final cooled = lastAt == null || now.difference(lastAt).inMinutes >= alertCooldownMinutes;
-      final wasInactive = !_activeAlertKeys.contains(condition.key);
-      if (cooled || wasInactive) {
+      if (cooled) {
         _alerts.insert(0, condition.item);
         _lastAlertAtByKey[condition.key] = now;
         changed = true;
       }
     }
-
-    _activeAlertKeys
-      ..clear()
-      ..addAll(currentKeys);
 
     if (_alerts.length > 50) {
       _alerts.removeRange(50, _alerts.length);
