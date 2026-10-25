@@ -1,4 +1,4 @@
-# AuraMind — Agentic AI Wellbeing Companion
+# AuraMind: Agentic AI Wellbeing Companion
 
 [![CI](https://github.com/franc13e/AuraMind/actions/workflows/ci.yml/badge.svg)](https://github.com/franc13e/AuraMind/actions/workflows/ci.yml)
 
